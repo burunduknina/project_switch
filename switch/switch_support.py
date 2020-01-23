@@ -22,6 +22,7 @@ def support_switch(func):
     Decorator to execute docstring of a functions instead of code.
     Support switch-case statement.
     """
+
     def wrapper(*args, **kwargs):
         arguments = ""
         for i in args:
@@ -36,6 +37,7 @@ def support_switch(func):
         result = {}
         old_exec(python_code, {}, result)
         return result[f"{func_name}_result"]
+    wrapper.__name__ = f'func_{func.__name__}'
 
     return wrapper
 
@@ -102,7 +104,7 @@ def change_switch_to_if(begin_switch_id, end_switch_id, code_lines, begin):
     code_lines[begin_switch_id] = re.sub(
         "switch", f"{var} =", code_lines[begin_switch_id]
     )
-    line_id = def_switch(code_lines, begin_switch_id + 1)
+    line_id = def_switch(code_lines, begin_switch_id + 1, end_switch_id)
     case_begin = re.match(r"[\ \t]*", code_lines[line_id + 1]).group(0)
     code_lines[line_id] = re.sub(
         r"[ \t]*case ", f"{begin}if {var} == ", code_lines[line_id]
@@ -155,21 +157,22 @@ def change_switch_to_if(begin_switch_id, end_switch_id, code_lines, begin):
     check_break_flag(break_flag)
 
 
-def def_switch(code_lines, line_id):
+def def_switch(code_lines, line_id, end_switch_id):
     """
     Function to find the end of the switch definition.
     :param code_lines: list of code lines.
     :param line_id: Index of first line of switch-case statement.
+    :param end_switch_id: Index of last line of switch-case statement.
     :return: Index of first line of case block.
     """
     case_mark = re.match(r"[ \t]*case", code_lines[line_id])
-    while not case_mark:
+    while line_id < end_switch_id and not case_mark:
         line_id += 1
         case_mark = re.match(r"[ \t]*case", code_lines[line_id])
-    if code_lines[line_id - 1][-1] == ":":
+    if case_mark and code_lines[line_id - 1][-1] == ":":
         code_lines[line_id - 1] = code_lines[line_id - 1][:-1]
     else:
-        raise SyntaxError('Line should ends with ":"')
+        raise SyntaxError('Incorrect syntax of switch-case statement.')
     return line_id
 
 
@@ -184,32 +187,3 @@ def check_break_flag(break_flag):
         "'break' statement is required at the end of case block without "
         "'return' method."
     )
-
-
-if __name__ == "__main__":
-
-    @support_switch
-    def my_function_with_switch(a: int, b: int, c: int):
-        """
-        switch a:
-             case b:
-                  return True
-             case c:
-                  return False
-        """
-
-    assert my_function_with_switch(2 * 2, 4, 5)
-
-    a, b, c = 2, 4, 5
-    d = None
-
-    exec("""switch a*a:
-        case b:
-            print("Foo")
-            d = 1
-            break
-        case c:
-            print("Bar")
-            d = 2
-            break \nassert d == 1
-    """)

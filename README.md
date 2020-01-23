@@ -36,7 +36,10 @@ exec("""switch a*a:
         d = 2
         break 
 assert d == 1
-""")
+""",
+globals(),
+locals()
+)
 ```
 - Example of support_switch():
 
