@@ -7,11 +7,21 @@ SWITCH = 6
 
 
 def exec(code, _globals=None, _locals=None):
-    python_code = "\n".join(change_code(code))
+    """
+    Overrode built-in function with support switch-case statement.
+    :param code: String with the code to execute.
+    :param _globals: A dictionary of available global methods and variables.
+    :param _locals: A dictionary of available local methods and variables.
+    """
+    python_code = change_code(code)
     old_exec(python_code, _globals, _locals)
 
 
 def support_switch(func):
+    """
+    Decorator to execute docstring of a functions instead of code.
+    Support switch-case statement.
+    """
     def wrapper(*args, **kwargs):
         arguments = ""
         for i in args:
@@ -19,7 +29,7 @@ def support_switch(func):
         for key, value in kwargs.items():
             arguments = f"{arguments}{str(key)} = {str(value)}, "
         func_name = func.__name__
-        python_code = "\n".join(change_code(func.__doc__))
+        python_code = change_code(func.__doc__)
         func_definition = f"def {func_name} {inspect.signature(func)}:\n"
         func_return = f"\n{func_name}_result = {func_name} ({arguments})"
         python_code = "".join((func_definition, python_code, func_return))
@@ -31,6 +41,11 @@ def support_switch(func):
 
 
 def change_code(code):
+    """
+    Function to replace switch-case statements to if-else.
+    :param code: String with the code to handle.
+    :return: String with updated code.
+    """
     draft_code_lines = code.rstrip().split("\n")
     code_lines = [
         line
@@ -50,10 +65,19 @@ def change_code(code):
             )
         else:
             line_id += 1
-    return code_lines
+    return "\n".join(code_lines)
 
 
 def handle_switch_block(code_length, code_lines, line, line_id, switch_marker):
+    """
+    Function to replace switch-case statement.
+    :param code_length: Number of lines in code.
+    :param code_lines: list of code lines.
+    :param line: First line of switch-case statement.
+    :param line_id: Index of first line of switch-case statement.
+    :param switch_marker: Match Objects.
+    :return: Index of last line of switch-case statement.
+    """
     switch_begin = line[: switch_marker.end() - SWITCH]
     begin_len = len(switch_begin)
     end_switch_id = line_id + 1
@@ -66,6 +90,13 @@ def handle_switch_block(code_length, code_lines, line, line_id, switch_marker):
 
 
 def change_switch_to_if(begin_switch_id, end_switch_id, code_lines, begin):
+    """
+    Function to parse and handle switch-case statement.
+    :param begin_switch_id: Index of first line of switch-case statement.
+    :param end_switch_id: Index of last line of switch-case statement.
+    :param code_lines: list of code lines.
+    :param begin: Indent for switch.
+    """
     var = "__switch_expression" + str(random.randint(100000, 1000000))
     break_flag = 0
     code_lines[begin_switch_id] = re.sub(
@@ -125,6 +156,12 @@ def change_switch_to_if(begin_switch_id, end_switch_id, code_lines, begin):
 
 
 def def_switch(code_lines, line_id):
+    """
+    Function to find the end of the switch definition.
+    :param code_lines: list of code lines.
+    :param line_id: Index of first line of switch-case statement.
+    :return: Index of first line of case block.
+    """
     case_mark = re.match(r"[ \t]*case", code_lines[line_id])
     while not case_mark:
         line_id += 1
@@ -137,6 +174,9 @@ def def_switch(code_lines, line_id):
 
 
 def check_break_flag(break_flag):
+    """
+    Function to check syntax.
+    """
     if break_flag:
         return 0
     raise SyntaxError(
