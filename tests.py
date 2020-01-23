@@ -172,8 +172,10 @@ def test_break_missing():
             globals(),
             loc,
         )
-    assert 'Control cannot fall through from one case label to another.' \
-           in str(exc.value)
+    assert (
+        "Control cannot fall through from one case label to another."
+        in str(exc.value)
+    )
 
 
 def test_case_missing():
@@ -197,8 +199,7 @@ def test_case_missing():
             globals(),
             loc,
         )
-    assert 'Incorrect syntax of switch-case statement.' \
-           in str(exc.value)
+    assert "Incorrect syntax of switch-case statement." in str(exc.value)
 
 
 def test_python_code_combination():
@@ -233,8 +234,6 @@ def test_python_code_handling():
     d = 0
     loc = locals()
     exec(
-        """d += 100\nd +=1""",
-        globals(),
-        loc,
+        """d += 100\nd +=1""", globals(), loc,
     )
     assert loc["d"] == 101

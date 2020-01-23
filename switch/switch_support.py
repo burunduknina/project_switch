@@ -37,7 +37,8 @@ def support_switch(func):
         result = {}
         old_exec(python_code, {}, result)
         return result[f"{func_name}_result"]
-    wrapper.__name__ = f'func_{func.__name__}'
+
+    wrapper.__name__ = f"func_{func.__name__}"
 
     return wrapper
 
@@ -172,7 +173,7 @@ def def_switch(code_lines, line_id, end_switch_id):
     if case_mark and code_lines[line_id - 1][-1] == ":":
         code_lines[line_id - 1] = code_lines[line_id - 1][:-1]
     else:
-        raise SyntaxError('Incorrect syntax of switch-case statement.')
+        raise SyntaxError("Incorrect syntax of switch-case statement.")
     return line_id
 
 
